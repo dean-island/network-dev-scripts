@@ -6,8 +6,9 @@ Custom development scripts and configuration for the network project. These scri
 
 This repository contains:
 - **direnv configuration** (`.envrc`) - Environment setup for the network project
-- **Neovim configuration** (`.nvim.lua`) - Project-specific Neovim settings
-- **Development scripts** (`bin/`) - Build, test, and utility scripts
+- **.direnv directory** - Contains Neovim config and development scripts
+  - **Neovim configuration** (`.direnv/.nvim.lua`) - Project-specific Neovim settings
+  - **Development scripts** (`.direnv/bin/`) - Build, test, and utility scripts
 
 ## Setup
 
@@ -22,7 +23,7 @@ Run the setup script to create the necessary symbolic links:
 ```
 
 This will create:
-- `~/work/network/.direnv` → `~/work/network-scripts/`
+- `~/work/network/.direnv` → `~/work/network-scripts/.direnv`
 - `~/work/network/.envrc` → `~/work/network-scripts/.envrc`
 
 ### Manual Setup
@@ -31,7 +32,7 @@ If you prefer to set up manually:
 
 ```bash
 # Create directory symlink
-ln -sf ~/work/network-scripts ~/work/network/.direnv
+ln -sf ~/work/network-scripts/.direnv ~/work/network/.direnv
 
 # Create file symlink
 ln -sf ~/work/network-scripts/.envrc ~/work/network/.envrc
@@ -245,24 +246,25 @@ chmod +x ~/work/network-scripts/bin/*
 
 ```
 network-dev-scripts/
-├── .envrc                 # direnv configuration
-├── .nvim.lua             # Neovim configuration
-├── bin/                  # Development scripts
-│   ├── build             # Build core-network
-│   ├── clean_containers  # Clean Docker containers
-│   ├── clean_network     # Clean Docker networks
-│   ├── conn-check        # Check connections
-│   ├── e2e               # Run E2E tests
-│   ├── e2e-no-build      # Run E2E without build
-│   ├── e2eperf           # Run E2E performance tests
-│   ├── lint              # Run linters
-│   ├── pull-ziggy        # Pull ziggy updates
-│   ├── push-ziggy        # Push ziggy updates
-│   ├── route-check       # Check routes
-│   ├── sync-main         # Sync main branch
-│   ├── ut                # Run specific unit test
-│   ├── ut-all            # Run all unit tests
-│   └── ut-specific       # Run tests for specific package
+├── .direnv/              # Directory symlinked to ~/work/network/.direnv
+│   ├── .nvim.lua         # Neovim configuration
+│   └── bin/              # Development scripts
+│       ├── build         # Build core-network
+│       ├── clean_containers  # Clean Docker containers
+│       ├── clean_network     # Clean Docker networks
+│       ├── conn-check        # Check connections
+│       ├── e2e               # Run E2E tests
+│       ├── e2e-no-build      # Run E2E without build
+│       ├── e2eperf           # Run E2E performance tests
+│       ├── lint              # Run linters
+│       ├── pull-ziggy        # Pull ziggy updates
+│       ├── push-ziggy        # Push ziggy updates
+│       ├── route-check       # Check routes
+│       ├── sync-main         # Sync main branch
+│       ├── ut                # Run specific unit test
+│       ├── ut-all            # Run all unit tests
+│       └── ut-specific       # Run tests for specific package
+├── .envrc                # direnv configuration (symlinked)
 ├── .gitignore            # Git ignore patterns
 ├── README.md             # This file
 └── setup.sh              # Symlink setup script

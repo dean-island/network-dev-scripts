@@ -30,8 +30,8 @@ if [ -L "$NETWORK_DIR/.envrc" ] || [ -e "$NETWORK_DIR/.envrc" ]; then
 fi
 
 # Create directory symlink for .direnv
-echo "Creating directory symlink: $NETWORK_DIR/.direnv -> $SCRIPT_DIR"
-ln -sf "$SCRIPT_DIR" "$NETWORK_DIR/.direnv"
+echo "Creating directory symlink: $NETWORK_DIR/.direnv -> $SCRIPT_DIR/.direnv"
+ln -sf "$SCRIPT_DIR/.direnv" "$NETWORK_DIR/.direnv"
 
 # Create file symlink for .envrc
 echo "Creating file symlink: $NETWORK_DIR/.envrc -> $SCRIPT_DIR/.envrc"
@@ -39,7 +39,7 @@ ln -sf "$SCRIPT_DIR/.envrc" "$NETWORK_DIR/.envrc"
 
 echo ""
 echo "Symlinks created successfully:"
-echo "  $NETWORK_DIR/.direnv -> $SCRIPT_DIR"
+echo "  $NETWORK_DIR/.direnv -> $SCRIPT_DIR/.direnv"
 echo "  $NETWORK_DIR/.envrc -> $SCRIPT_DIR/.envrc"
 echo ""
 
