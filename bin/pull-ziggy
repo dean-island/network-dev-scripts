@@ -1,0 +1,22 @@
+#!/bin/bash
+# Pull file/directory from remote machine as user ziggy
+# Usage: pull-ziggy <machine>[:<remote-path>] <local-path>
+# If no remote path specified, defaults to /home/ziggy
+
+if [ "$#" -ne 2 ]; then
+    echo "Usage: pull-ziggy <machine>[:<remote-path>] <local-path>"
+    echo "If no remote path specified, defaults to /home/ziggy"
+    exit 1
+fi
+
+remote="$1"
+
+# If no colon, add default path
+if [[ ! "$remote" =~ : ]]; then
+    remote="${remote}:/home/ziggy"
+# If colon but no path after it, add default path
+elif [[ "$remote" =~ :$ ]]; then
+    remote="${remote}/home/ziggy"
+fi
+
+rsync -avz -e "ssh -i ~/.ssh/dean-staging-keypair.pem" "ziggy@${remote}" "$2"

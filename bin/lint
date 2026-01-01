@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+
+function run() {
+    name="$1"
+    shift
+    cmd="$*"
+    echo "Running $name..."
+    if output=$($cmd 2>&1); then
+        echo -e "\nFinished $name successfully"
+        return 0
+    else
+        echo -e "\nFAILED $name: $output"
+        return 1
+    fi
+}
+
+# Get modified Go files and extract unique project directories
+get_modified_go_projects() {
+    local modified_files
+    modified_files=$(git diff --name-only HEAD --diff-filter=ACMRTUXB 2>/dev/null || echo "")
+
+    if [ -z "$modified_files" ]; then
+        # If no unstaged changes, check staged files
+        modified_files=$(git diff --cached --name-only --diff-filter=ACMRTUXB 2>/dev/null || echo "")
+    fi
+
+    if [ -z "$modified_files" ]; then
+        echo "No modified files found" >&2
+        return 1
+    fi
+
+    # Extract unique top-level directories that contain Go files
+    echo "$modified_files" | grep '\.go$' | cut -d/ -f1 | sort -u
+}
+
+ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+
+# Get list of modified projects
+MODIFIED_PROJECTS=$(get_modified_go_projects)
+
+if [ -z "$MODIFIED_PROJECTS" ]; then
+    echo "No Go files modified, skipping lint"
+    exit 0
+fi
+
+echo "Modified projects: $(echo "$MODIFIED_PROJECTS" | tr '\n' ' ')"
+echo ""
+
+# Track if core-network is modified for core-network-specific linters
+CORE_NETWORK_MODIFIED=false
+if echo "$MODIFIED_PROJECTS" | grep -q "^core-network$"; then
+    CORE_NETWORK_MODIFIED=true
+fi
+
+# Run core-network specific linters
+if [ "$CORE_NETWORK_MODIFIED" = true ]; then
+    echo "Running core-network specific linters..."
+    cd "$ROOT_DIR/core-network" || exit 1
+    run "generating mocks" go tool mockery
+    cd "$ROOT_DIR"
+
+    (cd "$ROOT_DIR/core-network" && run "syncutils linter" go run --ldflags=-linkmode=internal ../common/tools/syncutils-linter/main.go paths=. -exclude=vendor,testdata) &
+    (cd "$ROOT_DIR/core-network" && run "custom linters" go run ./tools/linters/ ./...) &
+    (cd "$ROOT_DIR/core-network" && run "checklocks linter" ../scripts/checklocks.sh -test=false -checklocks ./...) &
+fi
+
+# Run golangci-lint for each modified project
+for project in $MODIFIED_PROJECTS; do
+    if [ ! -d "$ROOT_DIR/$project" ]; then
+        continue
+    fi
+
+    # Check if the project has Go files
+    if ! find "$ROOT_DIR/$project" -maxdepth 3 -name "*.go" -type f | grep -q .; then
+        continue
+    fi
+
+    echo "Running golangci-lint for $project..."
+    (cd "$ROOT_DIR/$project" && run "golangci-lint ($project)" golangci-lint run --path-prefix="$project" --config=../.golangci.yml) &
+done
+
+# Also run golangci-lint-staged from core-network if it's modified
+if [ "$CORE_NETWORK_MODIFIED" = true ]; then
+    (cd "$ROOT_DIR/core-network" && run "golangci-lint-staged" sh ../common/scripts/golangci-lint-staged.sh) &
+fi
+
+# Wait for all background jobs
+echo ""
+echo "Waiting for all linters to complete..."
+job-spinner

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+ts=$(date +%Y-%m-%d_%H:%M:%S)
+logdir="$ROOT_DIR/logs_temp"
+mkdir -p "$logdir"
+output_file="$logdir/ut_${ts}.log"
+(
+    cd "$ROOT_DIR" && task core:test:unit:linux | tee "$output_file"
+)

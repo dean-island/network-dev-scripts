@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+(
+    full_path=$1
+    shift
+
+    set -e
+    cd "$ROOT_DIR" || (echo failed to cd to "$ROOT_DIR" && exit 1)
+    IFS='/' read -r first pkg_path <<<"$full_path"
+    cd "$first"
+
+    cmd="CGO_CFLAGS=-Wno-gnu-folding-constant go test ./$pkg_path/... -p=1 -parallel=8 -race $@ 2>&1 | rg -v 'ld: warning'"
+    echo Running: "$cmd"
+    eval "$cmd"
+)

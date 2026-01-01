@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+echo "Building core-network"
+ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+(
+    cd "$ROOT_DIR/core-network" && CGO_CFLAGS="-Wno-gnu-folding-constant" go build ./... &
+    BUILD_PID=$!
+    job-spinner
+    wait $BUILD_PID
+    exit $?
+)

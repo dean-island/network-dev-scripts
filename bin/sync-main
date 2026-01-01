@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+cd "$BARE_REPO_ROOT/main/" && git reset HEAD --hard && git pull

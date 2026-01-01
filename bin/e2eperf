@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+CORE_NETWORK_E2E_PARALLEL=${CORE_NETWORK_E2E_PARALLEL:-3}
+tests="${1:-'Performance$'}"
+set -e
+
+# task aws:login
+ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+cd "$ROOT_DIR/core-network"
+
+task build:client
+task build:connector
+task build:edge-router
+task build:proxy-adapter
+task build:e2e
+ts=$(date +%Y-%m-%d_%H:%M:%S)
+logdir="$ROOT_DIR/logs_temp"
+mkdir -p "$logdir"
+output_file="$logdir/go-test-performance-results_${ts}.xml"
+set +e
+echo "Starting test run with test filter '$tests'"
+(gotestsum --format testname --junitfile "$output_file" -- -v ./tests/e2e/... -run "$tests" -tags performance,e2e -timeout=20m) &
+job-spinner
+echo "Log file available at $(realpath $output_file)"

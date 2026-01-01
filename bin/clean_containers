@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+for id in $(docker ps -q); do
+  docker stop "$id" &
+done
+wait
+docker container prune -f && echo "done"
+

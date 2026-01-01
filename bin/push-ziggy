@@ -1,0 +1,22 @@
+#!/bin/bash
+# Push local file/directory to remote machine as user ziggy
+# Usage: push-ziggy <local-path> <machine>[:<remote-path>]
+# If no remote path specified, defaults to /home/ziggy
+
+if [ "$#" -ne 2 ]; then
+    echo "Usage: push-ziggy <local-path> <machine>[:<remote-path>]"
+    echo "If no remote path specified, defaults to /home/ziggy"
+    exit 1
+fi
+
+remote="$2"
+
+# If no colon, add default path
+if [[ ! "$remote" =~ : ]]; then
+    remote="${remote}:/home/ziggy"
+# If colon but no path after it, add default path
+elif [[ "$remote" =~ :$ ]]; then
+    remote="${remote}/home/ziggy"
+fi
+
+rsync -avz -e "ssh -i ~/.ssh/dean-staging-keypair.pem" "$1" "ziggy@${remote}"

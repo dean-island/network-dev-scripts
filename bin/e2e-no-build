@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+CORE_NETWORK_E2E_PARALLEL=${CORE_NETWORK_E2E_PARALLEL:-3}
+set -e
+
+ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+cd "$ROOT_DIR"
+# task aws:login
+cd "$ROOT_DIR/core-network"
+
+export CGO_CFLAGS="-Wno-gnu-folding-constant"
+
+# task build:client
+# task build:connector
+# task build:edge-router
+# task build:proxy-adapter
+task build:e2e
+ts=$(date +%Y-%m-%d_%H:%M:%S)
+logdir="$ROOT_DIR/logs_temp"
+mkdir -p "$logdir"
+output_file="$logdir/e2e_tests_${ts}.log"
+set +e
+echo "Starting test run, passed args: '$@'"
+# (gotestsum --format testname --junitfile report.xml -- --p=1 -parallel="$CORE_NETWORK_E2E_PARALLEL" -timeout=20m -v ./tests/... -tags e2e,integration $@ | tee "$output_file") &
+(go test --p=1 -parallel="$CORE_NETWORK_E2E_PARALLEL" -timeout=20m -v ./tests/... -tags e2e,integration $@ | tee "$output_file") &
+job-spinner
+echo "Log file available at $(realpath "$output_file")"
+echo "v $(realpath "$output_file")" | cbread
