@@ -60,7 +60,6 @@ if [ "$CORE_NETWORK_MODIFIED" = true ]; then
     cd "$ROOT_DIR"
 
     (cd "$ROOT_DIR/core-network" && run "syncutils linter" go run --ldflags=-linkmode=internal ../common/tools/syncutils-linter/main.go paths=. -exclude=vendor,testdata) &
-    (cd "$ROOT_DIR/core-network" && run "custom linters" go run ./tools/linters/ ./...) &
     (cd "$ROOT_DIR/core-network" && run "checklocks linter" ../scripts/checklocks.sh -test=false -checklocks ./...) &
 fi
 
@@ -77,6 +76,7 @@ for project in $MODIFIED_PROJECTS; do
 
     echo "Running golangci-lint for $project..."
     (cd "$ROOT_DIR/$project" && run "golangci-lint ($project)" golangci-lint run --path-prefix="$project" --config=../.golangci.yml) &
+    (cd "$ROOT_DIR/common/tools/linters" && run "custom linters" go run ./... ./... "$ROOT_DIR/$project") &
 done
 
 # Also run golangci-lint-staged from core-network if it's modified
